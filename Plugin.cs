@@ -1,84 +1,161 @@
-﻿using Dalamud.Game.ClientState;
+﻿using System;
+using System.Runtime.InteropServices;
+using Dalamud.Game;
+using Dalamud.Game.ClientState;
 using Dalamud.Game.Command;
 using Dalamud.Game.Gui;
-using Dalamud.Interface.Windowing;
+using Dalamud.Hooking;
+using Dalamud.IoC;
 using Dalamud.Logging;
 using Dalamud.Plugin;
-using DalamudPluginProjectTemplate.Attributes;
-using System;
+using FFXIVClientStructs.FFXIV.Client.UI;
 
-namespace DalamudPluginProjectTemplate
+namespace NameplateSignResizer
 {
-    public class Plugin : IDalamudPlugin
+    public sealed class Plugin : IDalamudPlugin
     {
-        private readonly DalamudPluginInterface pluginInterface;
-        private readonly ChatGui chat;
-        private readonly ClientState clientState;
+        public string Name => "NameplateSignResizer";
+        private const string configCommand = "/nsr";
+        private readonly int defaultXPos = 95;
+        private readonly int defaultYPos = 4;
 
-        private readonly PluginCommandManager<Plugin> commandManager;
-        private readonly Configuration config;
-        private readonly WindowSystem windowSystem;
+        [PluginService]
+        private DalamudPluginInterface PluginInterface { get; init; }
+        [PluginService]
+        private CommandManager CommandManager { get; init; }
+        private Configuration config { get; init; }
+        private PluginUI pluginUi { get; init; }
+        private Hook<SetNamePlateDelegate> setNamePlateHook;
+        internal PluginAddressResolver address;
 
-        public string Name => "Your Plugin's Display Name";
+        [PluginService]
+        public SigScanner SigScanner { get; set; }
+        [PluginService]
+        public ClientState Client { get; init; }
+        [PluginService]
+        public GameGui GameGui { get; set; }
+        public IntPtr AddonNamePlatePtr => GameGui.GetAddonByName("NamePlate", 1);
+        
 
         public Plugin(
-            DalamudPluginInterface pi,
-            CommandManager commands,
-            ChatGui chat,
-            ClientState clientState)
+            [RequiredVersion("1.0")] DalamudPluginInterface pluginInterface,
+            [RequiredVersion("1.0")] CommandManager commandManager)
         {
-            this.pluginInterface = pi;
-            this.chat = chat;
-            this.clientState = clientState;
+            this.PluginInterface = pluginInterface;
+            this.CommandManager = commandManager;
+            address = new PluginAddressResolver();
+            address.Setup(SigScanner);
+            setNamePlateHook = new Hook<SetNamePlateDelegate>(address.AddonNamePlate_SetNamePlatePtr, SetNamePlateDetour);
+            setNamePlateHook.Enable();
 
-            // Get or create a configuration object
-            this.config = (Configuration)this.pluginInterface.GetPluginConfig()
-                          ?? this.pluginInterface.Create<Configuration>();
+            // Setup and initialize config UI.
+            this.config = this.PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
+            this.config.Initialize(this.PluginInterface);
+            this.pluginUi = new PluginUI(this.config);
 
-            // Initialize the UI
-            this.windowSystem = new WindowSystem(typeof(Plugin).AssemblyQualifiedName);
-
-            var window = this.pluginInterface.Create<PluginWindow>();
-            if (window is not null)
+            // Add plugin commands
+            this.CommandManager.AddHandler(configCommand, new CommandInfo(OnConfig)
             {
-                this.windowSystem.AddWindow(window);
-            }
+                HelpMessage = "Open config window for Nameplate Sign Resizer"
+            });
 
-            this.pluginInterface.UiBuilder.Draw += this.windowSystem.Draw;
+            // Draw UI
+            this.PluginInterface.UiBuilder.Draw += DrawUI;
+            this.PluginInterface.UiBuilder.OpenConfigUi += DrawConfigUI;
 
-            // Load all of our commands
-            this.commandManager = new PluginCommandManager<Plugin>(this, commands);
-        }
-
-        [Command("/example1")]
-        [HelpMessage("Example help message.")]
-        public void ExampleCommand1(string command, string args)
-        {
-            // You may want to assign these references to private variables for convenience.
-            // Keep in mind that the local player does not exist until after logging in.
-            var world = this.clientState.LocalPlayer?.CurrentWorld.GameData;
-            this.chat.Print($"Hello, {world?.Name}!");
-            PluginLog.Log("Message sent successfully.");
-        }
-
-        #region IDisposable Support
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!disposing) return;
-
-            this.commandManager.Dispose();
-
-            this.pluginInterface.SavePluginConfig(this.config);
-
-            this.pluginInterface.UiBuilder.Draw -= this.windowSystem.Draw;
-            this.windowSystem.RemoveAllWindows();
         }
 
         public void Dispose()
         {
-            Dispose(true);
-            GC.SuppressFinalize(this);
+            this.pluginUi.Dispose();
+            this.CommandManager.RemoveHandler(configCommand);
+            setNamePlateHook.Dispose();
         }
-        #endregion
+
+        /// <summary>
+        /// Open/close plugin settings window.
+        /// </summary>
+        /// <param name="command"></param>
+        /// <param name="args"></param>
+        private void OnConfig(string command, string args)
+        {
+            
+            this.pluginUi.SettingsVisible = !this.pluginUi.SettingsVisible;
+        }
+
+        private unsafe void UpdateSign(AddonNamePlate.NamePlateObject npObject)
+        {
+            int xOffset = 0;
+            int yOffset = 0;
+            float scale = 1;
+            PluginLog.Log(npObject.IsPvpEnemy.ToString());
+            // Only apply config if plugin is enabled and nameplate is a non-pvp player nameplate.
+            if (config.enabled && npObject.NameplateKind == 0 && npObject.IsPvpEnemy == 0)
+            {
+                // Nameplate belongs to the local player or sync is enabled.
+                if (npObject.IsLocalPlayer || config.syncOthersWithSelf)
+                {
+                    // Hide nameplate sign.
+                    if (config.hideSignOnSelf)
+                        scale = 0;
+                    else
+                    {
+                        scale = config.ownSignScale;
+                        xOffset = config.xOffset;
+                        yOffset = config.yOffset;
+                    }
+                        
+                }
+                else
+                {
+                    if (config.hideSignOnOthers)
+                        scale = 0;
+                    else
+                    {
+                        scale = config.otherSignScale;
+                        xOffset = config.xOffsetOthers;
+                        yOffset = config.yOffsetOthers;
+                    }
+                }
+            }
+            
+            // Change icon size
+            npObject.ImageNode2->AtkResNode.SetScale(scale, scale);
+            // TODO: Auto position after scale change
+            // Offset icon position to compensate for scale change
+            //float posOffsetScale = scale < 1 ? scale : -scale;
+            npObject.ImageNode2->AtkResNode.SetPositionFloat(this.defaultXPos + xOffset, this.defaultYPos + yOffset);
+
+        }
+        private void DrawUI()
+        {
+            this.pluginUi.Draw();
+        }
+
+        private void DrawConfigUI()
+        {
+            this.pluginUi.SettingsVisible = true;
+        }
+
+        internal IntPtr SetNamePlateDetour(IntPtr namePlateObjectPtr, bool isPrefixTitle, bool displayTitle, IntPtr title, IntPtr name, IntPtr fcName, int iconID)
+        {
+            try
+            {
+                return SetNamePlate(namePlateObjectPtr, isPrefixTitle, displayTitle, title, name, fcName, iconID);
+            }
+            catch (Exception ex)
+            {
+                PluginLog.Error(ex, $"SetNamePlateDetour encountered a critical error");
+            }
+
+            return setNamePlateHook.Original(namePlateObjectPtr, isPrefixTitle, displayTitle, title, name, fcName, iconID);
+        }
+
+        internal IntPtr SetNamePlate(IntPtr namePlateObjectPtr, bool isPrefixTitle, bool displayTitle, IntPtr title, IntPtr name, IntPtr fcName, int iconID)
+        {
+            var npObject = Marshal.PtrToStructure<AddonNamePlate.NamePlateObject>(namePlateObjectPtr);
+            this.UpdateSign(npObject);
+            return setNamePlateHook.Original(namePlateObjectPtr, isPrefixTitle, displayTitle, title, name, fcName, iconID);
+        }
     }
 }

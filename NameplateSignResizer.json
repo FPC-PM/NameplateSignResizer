@@ -1,0 +1,15 @@
+{
+  "Author": "FPC-PM",
+  "Name": "NameplateSignResizer",
+  "Punchline": "Resize, reposition, or completely hide player nameplate signs!",
+  "Description": "Allows different configurations for your nameplate signs and others nameplate signs. \nDisabled for others in PvP.",
+  "InternalName": "NameplateSignResizer",
+  "RepoUrl": "https://github.com/FPC-PM/NameplateSignResizer",
+  "Tags": [
+    "UI"
+  ],
+  "ImageUrls": [
+
+  ],
+  "IconUrl":
+}
