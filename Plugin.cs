@@ -88,7 +88,6 @@ namespace NameplateSignResizer
             int xOffset = 0;
             int yOffset = 0;
             float scale = 1;
-            PluginLog.Log(npObject.IsPvpEnemy.ToString());
             // Only apply config if plugin is enabled and nameplate is a non-pvp player nameplate.
             if (config.enabled && npObject.NameplateKind == 0 && npObject.IsPvpEnemy == 0)
             {
