@@ -1,12 +1,11 @@
 # NameplateSignResizer
-* FFXIV Dalamud plugin for resizing, moving, and hiding player nameplate signs.
+* Nameplate signs can be annoying or distracting in their default location above your head. This plugin fixes that issue by giving you complete control over size and positioning; you can even hide the icon entirely if you want!
 * Disabled in PvP
 
 ### Before and After
-![](docs/Unmodified.png)
-![](docs/Modified.png)
+![](images/Unmodified.png)
+![](images/Modified.png)
 
 # TODO
-* [ ] Automatically set icon position with scale change.
+* [ ] Add an option to automatically center icon when scale changes.
 * [ ] Redesign Config UI
-* [ ] Fix weird wording in config

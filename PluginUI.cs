@@ -44,8 +44,8 @@ namespace NameplateSignResizer
                 return;
             }
 
-            ImGui.SetNextWindowSize(new Vector2(377, 330), ImGuiCond.Always);
-            ImGui.SetNextWindowSizeConstraints(new Vector2(377, 330), new Vector2(float.MaxValue, float.MaxValue));
+            ImGui.SetNextWindowSize(new Vector2(367, 333), ImGuiCond.Always);
+            ImGui.SetNextWindowSizeConstraints(new Vector2(367, 333), new Vector2(float.MaxValue, float.MaxValue));
             if (ImGui.Begin("Nameplate Sign Resizer", ref this.settingsVisible, ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse))
             {
                 ImGui.TextWrapped("Changes may take a few seconds to be shown. Moving character or camera helps force a refresh.");
@@ -60,7 +60,7 @@ namespace NameplateSignResizer
 
                 ImGui.SameLine();
                 var syncOthers = this.config.syncOthersWithSelf;
-                if (ImGui.Checkbox("Use Own Settings for Others", ref syncOthers))
+                if (ImGui.Checkbox("Sync others", ref syncOthers))
                 {
                     this.config.syncOthersWithSelf = syncOthers;
                     this.config.Save();
@@ -69,14 +69,14 @@ namespace NameplateSignResizer
                 ImGui.TextColored(new Vector4(0.8f, 0.8f, 0.8f, 1f), "?");
                 if(ImGui.IsItemHovered())
                 {
-                    ImGui.SetTooltip("Uses own nameplate settings for others. Does not reset others settings.");
+                    ImGui.SetTooltip("Applies your nameplate settings to other players\' nameplates. Does not reset any settings.");
                 }
 
                 ImGui.Spacing();
 
                 // Self
                 var hideOnSelf = this.config.hideSignOnSelf;
-                if (ImGui.Checkbox("Hide Sign on Self", ref hideOnSelf))
+                if (ImGui.Checkbox("Hide Sign on Me", ref hideOnSelf))
                 {
                     this.config.hideSignOnSelf = hideOnSelf;
                     this.config.Save();
@@ -91,26 +91,27 @@ namespace NameplateSignResizer
                 }
 
                 var ownSign = this.config.ownSignScale;
-                if (ImGui.SliderFloat("Own Sign Scale", ref ownSign, 0.1f, 2.0f, "%.1f", ImGuiSliderFlags.AlwaysClamp))
+                if (ImGui.SliderFloat("My Sign Scale", ref ownSign, 0.1f, 2.0f, "%.1f", ImGuiSliderFlags.AlwaysClamp))
                 {
                     this.config.ownSignScale = ownSign;
                     this.config.Save();
                 }
 
                 var xOffset = this.config.xOffset;
-                if (ImGui.SliderInt("Own X Offset", ref xOffset, -100, 100, "%.0f", ImGuiSliderFlags.AlwaysClamp))
+                if (ImGui.SliderInt("My X Offset", ref xOffset, -100, 100, "%.0f", ImGuiSliderFlags.AlwaysClamp))
                 {
                     this.config.xOffset = xOffset;
                     this.config.Save();
                 }
 
                 var yOffset = this.config.yOffset;
-                if (ImGui.SliderInt("Own Y Offset", ref yOffset, -100, 100, "%.0f", ImGuiSliderFlags.AlwaysClamp))
+                if (ImGui.SliderInt("My Y Offset", ref yOffset, -100, 100, "%.0f", ImGuiSliderFlags.AlwaysClamp))
                 {
                     this.config.yOffset = yOffset;
                     this.config.Save();
                 }
 
+                ImGui.Spacing();
                 ImGui.Spacing();
 
                 // Others

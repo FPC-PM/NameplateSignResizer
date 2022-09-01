@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFramework>net5.0-windows</TargetFramework>
+		<TargetFramework>net6.0-windows</TargetFramework>
 		<Authors>FPC-PM</Authors>
 		<Description>NameplateSignResizer Dalamud Plugin</Description>
 		<PackageProjectUrl>https://github.com/FPC-PM/NameplateSignResizer</PackageProjectUrl>
@@ -19,7 +19,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="DalamudPackager" Version="2.1.7" />
+		<PackageReference Include="DalamudPackager" Version="2.1.8" />
 	</ItemGroup>
 
 	<ItemGroup>

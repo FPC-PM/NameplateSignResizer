@@ -89,7 +89,7 @@ namespace NameplateSignResizer
             int yOffset = 0;
             float scale = 1;
             // Only apply config if plugin is enabled and nameplate is a non-pvp player nameplate.
-            if (config.enabled && npObject.NameplateKind == 0 && npObject.IsPvpEnemy == 0)
+            if (config.enabled && npObject.IsPlayerCharacter && npObject.NameplateKind == 0 && npObject.IsPvpEnemy == 0)
             {
                 // Nameplate belongs to the local player or sync is enabled.
                 if (npObject.IsLocalPlayer || config.syncOthersWithSelf)
