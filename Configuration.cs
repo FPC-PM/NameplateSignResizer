@@ -10,7 +10,7 @@ namespace NameplateSignResizer
         public int Version { get; set; } = 0;
         public bool enabled { get; set; } = true;
         public bool syncOthersWithSelf { get; set; } = false;
-
+        public bool experimentalFeatures { get; set; } = false;
         public bool hideSignOnSelf { get; set; } = false;
         public float ownSignScale { get; set; } = 1.0f;
         public int xOffset { get; set; } = 0;

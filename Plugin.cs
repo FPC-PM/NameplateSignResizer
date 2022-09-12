@@ -92,7 +92,8 @@ namespace NameplateSignResizer
             if (config.enabled && npObject.IsPlayerCharacter && npObject.NameplateKind == 0 && npObject.IsPvpEnemy == 0)
             {
                 // Nameplate belongs to the local player or sync is enabled.
-                if (npObject.IsLocalPlayer || config.syncOthersWithSelf)
+                if (npObject.IsLocalPlayer ||
+                    (config.syncOthersWithSelf && config.experimentalFeatures))
                 {
                     // Hide nameplate sign.
                     if (config.hideSignOnSelf)
@@ -107,14 +108,20 @@ namespace NameplateSignResizer
                 }
                 else
                 {
-                    if (config.hideSignOnOthers)
-                        scale = 0;
-                    else
+                    // Skip if experimental features are not enabled.
+                    // TODO: Fix bug causing settings for other players to also apply to some NPC quest markers.
+                    if (config.experimentalFeatures)
                     {
-                        scale = config.otherSignScale;
-                        xOffset = config.xOffsetOthers;
-                        yOffset = config.yOffsetOthers;
+                        if (config.hideSignOnOthers)
+                            scale = 0;
+                        else
+                        {
+                            scale = config.otherSignScale;
+                            xOffset = config.xOffsetOthers;
+                            yOffset = config.yOffsetOthers;
+                        }
                     }
+                    
                 }
             }
             

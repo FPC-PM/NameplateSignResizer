@@ -7,5 +7,5 @@
 ![](images/Modified.png)
 
 # TODO
+* [ ] Fix bug causing settings for other players to also apply to some NPC quest markers.
 * [ ] Add an option to automatically center icon when scale changes.
-* [ ] Redesign Config UI

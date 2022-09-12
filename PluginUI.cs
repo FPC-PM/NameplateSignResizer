@@ -43,9 +43,14 @@ namespace NameplateSignResizer
             {
                 return;
             }
+            var windowHeight = 245;
+            if (this.config.experimentalFeatures)
+            {
+                windowHeight = 360;
+            }
 
-            ImGui.SetNextWindowSize(new Vector2(367, 333), ImGuiCond.Always);
-            ImGui.SetNextWindowSizeConstraints(new Vector2(367, 333), new Vector2(float.MaxValue, float.MaxValue));
+            ImGui.SetNextWindowSize(new Vector2(365, windowHeight), ImGuiCond.Always);
+            //ImGui.SetNextWindowSizeConstraints(new Vector2(365, windowHeight), new Vector2(float.MaxValue, float.MaxValue));
             if (ImGui.Begin("Nameplate Sign Resizer", ref this.settingsVisible, ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse))
             {
                 ImGui.TextWrapped("Changes may take a few seconds to be shown. Moving character or camera helps force a refresh.");
@@ -57,19 +62,21 @@ namespace NameplateSignResizer
                     this.config.enabled = enabled;
                     this.config.Save();
                 }
-
-                ImGui.SameLine();
-                var syncOthers = this.config.syncOthersWithSelf;
-                if (ImGui.Checkbox("Sync others", ref syncOthers))
+                if (this.config.experimentalFeatures)
                 {
-                    this.config.syncOthersWithSelf = syncOthers;
-                    this.config.Save();
-                }
-                ImGui.SameLine();
-                ImGui.TextColored(new Vector4(0.8f, 0.8f, 0.8f, 1f), "?");
-                if(ImGui.IsItemHovered())
-                {
-                    ImGui.SetTooltip("Applies your nameplate settings to other players\' nameplates. Does not reset any settings.");
+                    ImGui.SameLine();
+                    var syncOthers = this.config.syncOthersWithSelf;
+                    if (ImGui.Checkbox("Sync others", ref syncOthers))
+                    {
+                        this.config.syncOthersWithSelf = syncOthers;
+                        this.config.Save();
+                    }
+                    ImGui.SameLine();
+                    ImGui.TextColored(new Vector4(0.8f, 0.8f, 0.8f, 1f), "?");
+                    if (ImGui.IsItemHovered())
+                    {
+                        ImGui.SetTooltip("Applies your nameplate settings to other players\' nameplates. Does not reset any settings.");
+                    }
                 }
 
                 ImGui.Spacing();
@@ -111,44 +118,63 @@ namespace NameplateSignResizer
                     this.config.Save();
                 }
 
-                ImGui.Spacing();
-                ImGui.Spacing();
-
-                // Others
-                var hideOnOthers = this.config.hideSignOnOthers;
-                if (ImGui.Checkbox("Hide Sign on Others", ref hideOnOthers))
+                var exp = this.config.experimentalFeatures;
+                if (ImGui.Checkbox("Experimental Features", ref exp))
                 {
-                    this.config.hideSignOnOthers = hideOnOthers;
-                    this.config.Save();
-                }
-                var resetOthersSize = new Vector2(85, 23);
-                ImGui.SameLine(255);
-                if (ImGui.Button("Reset Others", resetOthersSize))
-                {
-                    this.config.resetOthers();
+                    this.config.experimentalFeatures = exp;
                     this.config.Save();
                 }
 
-                var othersSign = this.config.otherSignScale;
-                if (ImGui.SliderFloat("Others Sign Scale", ref othersSign, 0.1f, 2.0f, "%.1f", ImGuiSliderFlags.AlwaysClamp))
+                ImGui.SameLine();
+                ImGui.TextColored(new Vector4(0.8f, 0.8f, 0.8f, 1f), "?");
+                if (ImGui.IsItemHovered())
                 {
-                    this.config.otherSignScale = othersSign;
-                    this.config.Save();
+                    ImGui.SetTooltip("Enables resizing options for other players. Warning: this is buggy and will apply to some NPC quest markers.");
                 }
 
-                var xOffsetOthers = this.config.xOffsetOthers;
-                if (ImGui.SliderInt("Others X Offset", ref xOffsetOthers, -100, 100, "%.0f", ImGuiSliderFlags.AlwaysClamp))
-                {
-                    this.config.xOffsetOthers = xOffsetOthers;
-                    this.config.Save();
-                }
 
-                var yOffsetOthers = this.config.yOffsetOthers;
-                if (ImGui.SliderInt("Others Y Offset", ref yOffsetOthers, -100, 100, "%.0f", ImGuiSliderFlags.AlwaysClamp))
+                if (exp)
                 {
-                    this.config.yOffsetOthers = yOffsetOthers;
-                    this.config.Save();
+                    ImGui.Spacing();
+                    ImGui.Spacing();
+
+                    // Others
+                    var hideOnOthers = this.config.hideSignOnOthers;
+                    if (ImGui.Checkbox("Hide Sign on Others", ref hideOnOthers))
+                    {
+                        this.config.hideSignOnOthers = hideOnOthers;
+                        this.config.Save();
+                    }
+                    var resetOthersSize = new Vector2(85, 23);
+                    ImGui.SameLine(255);
+                    if (ImGui.Button("Reset Others", resetOthersSize))
+                    {
+                        this.config.resetOthers();
+                        this.config.Save();
+                    }
+
+                    var othersSign = this.config.otherSignScale;
+                    if (ImGui.SliderFloat("Others Sign Scale", ref othersSign, 0.1f, 2.0f, "%.1f", ImGuiSliderFlags.AlwaysClamp))
+                    {
+                        this.config.otherSignScale = othersSign;
+                        this.config.Save();
+                    }
+
+                    var xOffsetOthers = this.config.xOffsetOthers;
+                    if (ImGui.SliderInt("Others X Offset", ref xOffsetOthers, -100, 100, "%.0f", ImGuiSliderFlags.AlwaysClamp))
+                    {
+                        this.config.xOffsetOthers = xOffsetOthers;
+                        this.config.Save();
+                    }
+
+                    var yOffsetOthers = this.config.yOffsetOthers;
+                    if (ImGui.SliderInt("Others Y Offset", ref yOffsetOthers, -100, 100, "%.0f", ImGuiSliderFlags.AlwaysClamp))
+                    {
+                        this.config.yOffsetOthers = yOffsetOthers;
+                        this.config.Save();
+                    }
                 }
+                
             }
             ImGui.End();
         }
